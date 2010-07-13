@@ -30,13 +30,11 @@
  */
 
 #include <sys/cdefs.h>
-#ifndef lint
-__RCSID("$NetBSD: progressbar.c,v 1.20.6.1 2009/05/13 19:19:50 jym Exp $");
-#endif /* not lint */
 
 /*
  * FTP User Program -- Misc support routines
  */
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/param.h>
 
@@ -47,8 +45,11 @@ __RCSID("$NetBSD: progressbar.c,v 1.20.6.1 2009/05/13 19:19:50 jym Exp $");
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <tzfile.h>
 #include <unistd.h>
+
+#ifndef SECSPERHOUR
+#define SECSPERHOUR 3600
+#endif
 
 #include "progressbar.h"
 
@@ -77,6 +78,7 @@ static void updateprogressmeter(int);
 static void
 updateprogressmeter(int dummy)
 {
+	(void) dummy;
 	int oerrno = errno;
 
 	progressmeter(0);

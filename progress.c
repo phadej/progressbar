@@ -30,9 +30,6 @@
  */
 
 #include <sys/cdefs.h>
-#ifndef lint
-__RCSID("$NetBSD: progress.c,v 1.16.2.1 2008/06/23 04:32:11 wrstuden Exp $");
-#endif				/* not lint */
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -56,8 +53,9 @@ __RCSID("$NetBSD: progress.c,v 1.16.2.1 2008/06/23 04:32:11 wrstuden Exp $");
 #include <string.h>
 #include <termios.h>
 #include <time.h>
-#include <tzfile.h>
 #include <unistd.h>
+
+#include <getopt.h>
 
 #define GLOBAL			/* force GLOBAL decls in progressbar.h to be
 				 * declared */
@@ -67,9 +65,22 @@ static void broken_pipe(int unused);
 static void usage(void);
 int main(int, char *[]);
 
+static const char * progname;
+static const char *
+getprogname() {
+	return progname;
+}
+
+static void
+setprogname(const char *name) {
+	progname = name;
+}
+
 static void
 broken_pipe(int unused)
 {
+	(void) unused;
+
 	signal(SIGPIPE, SIG_DFL);
 	progressmeter(1);
 	kill(getpid(), SIGPIPE);
@@ -98,7 +109,7 @@ main(int argc, char *argv[])
 	ssize_t nr, nw, off;
 	size_t buffersize;
 	struct stat statb;
-	struct ttysize ts;
+	//struct ttysize ts;
 
 	setprogname(argv[0]);
 
@@ -111,8 +122,7 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "b:ef:l:p:z")) != -1)
 		switch (ch) {
 		case 'b':
-			buffersize = (size_t) strsuftoll("buffer size", optarg,
-			    0, SIZE_T_MAX);
+			buffersize = (size_t) strtoll(optarg, NULL, 10);
 			break;
 		case 'e':
 			eflag++;
@@ -122,8 +132,7 @@ main(int argc, char *argv[])
 			break;
 		case 'l':
 			lflag++;
-			filesize = strsuftoll("input size", optarg, 0,
-			    LLONG_MAX);
+			filesize = (size_t) strtoll(optarg, NULL, 10);
 			break;
 		case 'p':
 			prefix = optarg;
@@ -210,10 +219,11 @@ main(int argc, char *argv[])
 	progress = 1;
 	ttyout = eflag ? stderr : stdout;
 
-	if (ioctl(fileno(ttyout), TIOCGSIZE, &ts) == -1)
+	// TODO: get terminal width
+	//if (ioctl(fileno(ttyout), TIOCGSIZE, &ts) == -1)
 		ttywidth = 80;
-	else
-		ttywidth = ts.ts_cols;
+	//else
+	//	ttywidth = ts.ts_cols;
 
 	fb_buf = malloc(buffersize);
 	if (fb_buf == NULL)
