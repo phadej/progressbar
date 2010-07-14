@@ -110,7 +110,7 @@ main(int argc, char *argv[])
 	pid_t pid = 0, gzippid = 0, deadpid;
 	int ch, fd, outpipe[2];
 	int ws, gzipstat, cmdstat;
-	int eflag = 0, lflag = 0, zflag = 0;
+	int eflag = 0, lflag = 0, zflag = 0, jflag = 0;
 	ssize_t nr, nw, off;
 	size_t buffersize;
 	struct stat statb;
@@ -124,7 +124,7 @@ main(int argc, char *argv[])
 	buffersize = 64 * 1024;
 	prefix = NULL;
 
-	while ((ch = getopt(argc, argv, "b:ef:l:p:z")) != -1)
+	while ((ch = getopt(argc, argv, "b:ef:l:p:zj")) != -1)
 		switch (ch) {
 		case 'b':
 			buffersize = (size_t) strsuftoll("buffer size", optarg,
@@ -145,7 +145,12 @@ main(int argc, char *argv[])
 			prefix = optarg;
 			break;
 		case 'z':
-			zflag++;
+			zflag = 1;
+			jflag = 0;
+			break;
+		case 'j':
+			jflag = 1;
+			zflag = 0;
 			break;
 		case '?':
 		default:
@@ -218,6 +223,30 @@ main(int argc, char *argv[])
 			close(gzippipe[1]);
 			if (execlp("gzip", "gzip", "-dc", NULL))
 				err(1, "exec()ing gzip");
+		}
+	}
+	/* Pipe input through bzip2 -dc if -j is given */
+	else if (jflag) {
+		int bzippipe[2];
+
+		if (pipe(bzippipe) < 0)
+			err(1, "bzip2 pipe");
+		gzippid = fork(); /* use the same as above */
+		if (gzippid < 0)
+			err(1, "fork for bzip2");
+
+		if (gzippid) {
+			/* parent */
+			dup2(bzippipe[0], fd);
+			close(bzippipe[0]);
+			close(bzippipe[1]);
+		} else {
+			dup2(bzippipe[1], STDOUT_FILENO);
+			dup2(fd, STDIN_FILENO);
+			close(bzippipe[0]);
+			close(bzippipe[1]);
+			if (execlp("bzip2", "bzip2", "-dc", NULL))
+				err(1, "exec()ing bzip2");
 		}
 	}
 
