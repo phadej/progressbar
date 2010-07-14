@@ -1,3 +1,4 @@
 progress
 progress.o
 progressbar.o
+strsuftoll.o

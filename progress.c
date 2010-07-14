@@ -60,6 +60,11 @@
 #define GLOBAL			/* force GLOBAL decls in progressbar.h to be
 				 * declared */
 #include "progressbar.h"
+#include "strsuftoll.h"
+
+#ifndef SIZE_T_MAX
+#define SIZE_T_MAX ((size_t) -1)
+#endif
 
 static void broken_pipe(int unused);
 static void usage(void);
@@ -122,7 +127,8 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "b:ef:l:p:z")) != -1)
 		switch (ch) {
 		case 'b':
-			buffersize = (size_t) strtoll(optarg, NULL, 10);
+			buffersize = (size_t) strsuftoll("buffer size", optarg,
+					0, SIZE_T_MAX);
 			break;
 		case 'e':
 			eflag++;
@@ -132,7 +138,8 @@ main(int argc, char *argv[])
 			break;
 		case 'l':
 			lflag++;
-			filesize = (size_t) strtoll(optarg, NULL, 10);
+			filesize = strsuftoll("input size", optarg, 0,
+					LLONG_MAX);
 			break;
 		case 'p':
 			prefix = optarg;
@@ -173,7 +180,7 @@ main(int argc, char *argv[])
 
 		/*
 		 * Read second word of last line of gzip -l output. Looks like:
-		 * % gzip -l ../etc.tgz 
+		 * % gzip -l ../etc.tgz
 		 *   compressed uncompressed  ratio uncompressed_name
 		 * 	 119737       696320  82.8% ../etc.tar
 		 */

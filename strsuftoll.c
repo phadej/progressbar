@@ -60,19 +60,7 @@
  * SUCH DAMAGE.
  */
 
-#if HAVE_NBTOOL_CONFIG_H
-#include "nbtool_config.h"
-#endif
-
 #include <sys/cdefs.h>
-
-#if defined(LIBC_SCCS) && !defined(lint)
-__RCSID("$NetBSD: strsuftoll.c,v 1.8 2008/04/28 20:23:00 martin Exp $");
-#endif /* LIBC_SCCS and not lint */
-
-#ifdef _LIBC
-#include "namespace.h"
-#endif
 
 #if !HAVE_STRSUFTOLL
 
@@ -87,6 +75,9 @@ __RCSID("$NetBSD: strsuftoll.c,v 1.8 2008/04/28 20:23:00 martin Exp $");
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "strsuftoll.h"
+#define _DIAGASSERT(x) assert(x)
 
 #ifdef _LIBC
 # ifdef __weak_alias
